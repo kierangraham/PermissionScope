@@ -1003,8 +1003,14 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
         onCancel = cancelled
         
         DispatchQueue.global().async {
+            var timeoutExpired: Bool = false
+            DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(10), execute: {
+                timeoutExpired = true
+            })
+
             // waiting For Bluetooth and Motion State in Background in case choking the main thread which lead to peripheralManagerDidUpdateState cannot callback
-            while self.waitingForBluetooth || self.waitingForMotion { }
+            while (self.waitingForBluetooth || self.waitingForMotion) && !timeoutExpired { }
+
             DispatchQueue.main.async {
                 // call other methods that need to wait before show
                 // no missing required perms? callback and do nothing
